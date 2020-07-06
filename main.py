@@ -143,6 +143,7 @@ def infer_on_stream(args, client):
         ### TODO: Start asynchronous inference for specified request ###
          net_input = {'image_tensor': net_input_image, 'image_info': net_input_image.shape[1:]}
         #duration_report = None
+        infer_network.exec_net(request_id, net_input)
 
         ### TODO: Wait for the result ###
         if infer_network.wait() == 0:
@@ -171,7 +172,7 @@ def infer_on_stream(args, client):
                 timer_enter = time.time()
                 previous_off = timer_enter - timer_leave
                 current_counter = people_detected
-                if previous_off>15:
+                if previous_off > 15:
                     total_counter += people_detected - current_counter
                     client.publish("person", json.dumps({"total": total_counter}))
             
@@ -195,10 +196,6 @@ def infer_on_stream(args, client):
 
     cap.release()
     cv2.destroyAllWindows()
-                           
-            
-        
-       
 
 
 def main():
