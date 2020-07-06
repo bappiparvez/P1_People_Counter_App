@@ -36,10 +36,38 @@ class Network:
 
     def __init__(self):
         ### TODO: Initialize any class variables desired ###
+        self.plugin = None
+        self.network = None
+        self.input_blob = None
+        self.output_blob = None
+        self.exec_network = None
+        self.infer_request = None
 
     def load_model(self):
         ### TODO: Load the model ###
+        model_xml = model
+        model_bin = os.path.splitext(model_xml)[0] + ".bin"       
+        self.plugin = IECore()
+        self.network = IENetwork(model=model_xml, weights=model_bin)
+ 
         ### TODO: Check for supported layers ###
+        supported_layers = self.plugin.query_network(self.network, device_name=device)
+        layers = self.network.layers.keys()
+
+        all_supported = True
+        for l in layers:
+            if l not in supported_layers:
+                all_supported = False
+        if not all_supported:
+            print('Not all model layers supported, please specify an appropriate cpu_extension with --cpu_extension')
+            self.plugin.add_extension(cpu_extension, device)
+            
+        self.exec_network = self.plugin.load_network(self.network, device)
+   
+        #Getting the input layer
+        self.input_blob = next(iter(self.network.inputs))
+        self.output_blob = next(iter(self.network.outputs))
+
         ### TODO: Add any necessary extensions ###
         ### TODO: Return the loaded inference plugin ###
         ### Note: You may need to update the function parameters. ###
