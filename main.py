@@ -128,21 +128,47 @@ def infer_on_stream(args, client):
         assert os.path.isfile(args.input), "file doesn't exist"
         
     ### TODO: Loop until stream is over ###
-    while cap.isOpened(): 
+    while cap.isOpened():
+         
         ### TODO: Read from the video capture ###
         flag, frame = cap.read()
         if not flag:
             break
+
         ### TODO: Pre-process the image as needed ###
+        net_input_image = cv2.resize(frame, (in_shape[3], in_shape[2]))
+        net_input_image = net_input_image.transpose((2, 0, 1))
+        net_input_image = net_input_image.reshape(1, *net_input_image.shape)
 
         ### TODO: Start asynchronous inference for specified request ###
+         net_input = {'image_tensor': net_input_image, 'image_info': net_input_image.shape[1:]}
+        #duration_report = None
 
         ### TODO: Wait for the result ###
-
+        if infer_network.wait() == 0:
             ### TODO: Get the results of the inference request ###
+            net_output = infer_network.get_output()
 
             ### TODO: Extract any desired stats from the results ###
+            people_detected = 0
+            probs = net_output[0, 0, :, 2]
+            for i, p in enumerate(probs):
+                if p > prob_threshold:
+                    people_detected += 1
+                    bbox = net_output[0, 0, i, 3:]
+                    p1 = (int(bbox[0] * w), int(bbox[1] * h))
+                    p2 = (int(bbox[2] * w), int(bbox[3] * h))
+                    frame = cv2.rectangle(frame, p1, p2, (0, 255, 0), 3)
 
+                       # someone enters the scene
+            if people_detected > current_counter:
+                timer_enter = time.time()
+                previous_off = timer_enter - timer_leave
+                current_counter = people_detected
+                if previous_off>15:
+                    total_counter += people_detected - current_counter
+                    client.publish("person", json.dumps({"total": total_counter}))
+                           
             ### TODO: Calculate and send relevant information on ###
             ### current_count, total_count and duration to the MQTT server ###
             ### Topic "person": keys of "count" and "total" ###
