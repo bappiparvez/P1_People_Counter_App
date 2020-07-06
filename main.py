@@ -95,6 +95,21 @@ def infer_on_stream(args, client):
     
     ### TODO: Handle the input stream ###
     # Checks for live feed
+
+    cap = cv2.VideoCapture(input_stream)
+    cap.open(input_stream)
+
+    w = int(cap.get(3))
+    h = int(cap.get(4))
+
+    in_shape = network_shape
+
+    #iniatilize variables
+    request_id=0
+    current_counter=0
+    total_counter=0
+    timer_enter=0
+    timer_leave=0
     
     if args.input == 'CAM':
         input_stream = 0
@@ -113,9 +128,11 @@ def infer_on_stream(args, client):
         assert os.path.isfile(args.input), "file doesn't exist"
         
     ### TODO: Loop until stream is over ###
-
+    while cap.isOpened(): 
         ### TODO: Read from the video capture ###
-
+        flag, frame = cap.read()
+        if not flag:
+            break
         ### TODO: Pre-process the image as needed ###
 
         ### TODO: Start asynchronous inference for specified request ###
