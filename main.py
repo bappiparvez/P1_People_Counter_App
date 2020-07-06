@@ -160,7 +160,13 @@ def infer_on_stream(args, client):
                     p2 = (int(bbox[2] * w), int(bbox[3] * h))
                     frame = cv2.rectangle(frame, p1, p2, (0, 255, 0), 3)
 
-                       # someone enters the scene
+
+            ### TODO: Calculate and send relevant information on ###
+            ### current_count, total_count and duration to the MQTT server ###
+            ### Topic "person": keys of "count" and "total" ###
+            ### Topic "person/duration": key of "duration" ###
+
+            # someone enters the scene
             if people_detected > current_counter:
                 timer_enter = time.time()
                 previous_off = timer_enter - timer_leave
@@ -168,15 +174,31 @@ def infer_on_stream(args, client):
                 if previous_off>15:
                     total_counter += people_detected - current_counter
                     client.publish("person", json.dumps({"total": total_counter}))
-                           
-            ### TODO: Calculate and send relevant information on ###
-            ### current_count, total_count and duration to the MQTT server ###
-            ### Topic "person": keys of "count" and "total" ###
-            ### Topic "person/duration": key of "duration" ###
+            
+            # someone leaves the scene
+            if people_detected < current_counter:
+                timer_leave = time.time()
+                previous_on = timer_leave - timer_enter
+                current_counter = people_detected
+                if previous_on > 15:
+                    client.publish("person/duration", json.dumps({"duration": int(previous_on)}))
 
-        ### TODO: Send the frame to the FFMPEG server ###
+            ### TODO: Send the frame to the FFMPEG server ###
+            client.publish("person", json.dumps({"count": current_counter}))
 
+        sys.stdout.buffer.write(frame)
+        sys.stdout.flush()
+        
         ### TODO: Write an output image if `single_image_mode` ###
+        if single_image_mode:
+            cv2.imwrite('output_image.jpg', frame)
+
+    cap.release()
+    cv2.destroyAllWindows()
+                           
+            
+        
+       
 
 
 def main():
