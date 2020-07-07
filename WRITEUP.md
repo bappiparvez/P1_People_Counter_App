@@ -1,14 +1,17 @@
 # Project Write-Up
 
-You can use this document as a template for providing your project write-up. However, if you
-have a different format you prefer, feel free to use it as long as you answer all required
-questions.
+This documents decribe my way around to the first project of Udacity Intel AI Edge Nanodegree Program
 
 ## Explaining Custom Layers
 
-The process behind converting custom layers involves...
+Custom layers are layers that are not included in the list of known layers. If your topology contains any layers that are not in the list of known layers, the Model Optimizer classifies them as custom.
 
-Some of the potential reasons for handling custom layers are...
+The process behind converting custom layers involves the following.
+
+- Generate the Extension Template Files Using the Model Extension Generator
+- Using Model Optimizer to Generate IR Files Containing the Custom Layer
+- Edit the CPU Extension Template Files
+- Execute the Model with the Custom Layer
 
 ## Comparing Model Performance
 
