@@ -44,7 +44,8 @@ class Network:
         self.infer_request = None
 
 
-    def load_model(self):
+    def load_model(self, model, CPU_EXTENSION, DEVICE, console_output= False):
+        
         ### TODO: Load the model ###
         model_xml = model
         model_bin = os.path.splitext(model_xml)[0] + ".bin"
@@ -73,7 +74,7 @@ class Network:
             input_shapes[inp] = (self.network.inputs[inp].shape)
         return input_shapes
   
-    def exec_net(self):
+    def exec_net(self,net_input, request_id):
         ### TODO: Start an asynchronous request ###
         ### TODO: Return any necessary information ###
         ### Note: You may need to update the function parameters. ###
@@ -86,9 +87,24 @@ class Network:
         ### TODO: Wait for the request to be complete. ###
         ### TODO: Return any necessary information ###
         ### Note: You may need to update the function parameters. ###
-        return
+        status = self.infer_request_handle.wait()
+        return status
 
     def get_output(self):
         ### TODO: Extract and return the output results
         ### Note: You may need to update the function parameters. ###
-        return
+        out = self.infer_request_handle.outputs[self.output_blob]
+        return out
+
+def all_layers_supported(engine, network, console_output=False):
+    ### TODO check if all layers are supported
+    ### return True if all supported, False otherwise
+    layers_supported = engine.query_network(network, device_name='CPU')
+    layers = network.layers.keys()
+
+    all_supported = True
+    for l in layers:
+        if l not in layers_supported:
+            all_supported = False
+
+    return all_supported
