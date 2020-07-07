@@ -69,8 +69,8 @@ def build_argparser():
 
 
 def connect_mqtt():
-    client = mqtt.Client()
-    client.connect(MQTT_HOST, MQTT_PORT, MQTT_KEEPALIVE_INTERVAL)
+    ### TODO: Connect to the MQTT client ###
+    client = None
 
     return client
 
@@ -90,112 +90,31 @@ def infer_on_stream(args, client):
     prob_threshold = args.prob_threshold
 
     ### TODO: Load the model through `infer_network` ###
-    infer_network.load_model(model, CPU_EXTENSION, DEVICE)
-    network_shape = infer_network.get_input_shape()
-    
+
     ### TODO: Handle the input stream ###
-    # Checks for live feed
 
-    cap = cv2.VideoCapture(input_stream)
-    cap.open(input_stream)
-
-    w = int(cap.get(3))
-    h = int(cap.get(4))
-
-    in_shape = network_shape
-
-    #iniatilize variables
-    request_id=0
-    current_counter=0
-    total_counter=0
-    timer_enter=0
-    timer_leave=0
-    
-    if args.input == 'CAM':
-        input_stream = 0
-        single_image_mode = False
-        
-    # Checks if the input is an image
-    
-    elif args.input.endswith('.jpg') or args.input.endswith('.bmp') :
-        single_image_mode = True
-        input_stream = args.input
-        
-    # Checks if the input is a video file
-    else:
-        single_image_mode = False
-        input_stream = args.input
-        assert os.path.isfile(args.input), "file doesn't exist"
-        
     ### TODO: Loop until stream is over ###
-    while cap.isOpened():
-         
+
         ### TODO: Read from the video capture ###
-        flag, frame = cap.read()
-        if not flag:
-            break
 
         ### TODO: Pre-process the image as needed ###
-        net_input_image = cv2.resize(frame, (in_shape[3], in_shape[2]))
-        net_input_image = net_input_image.transpose((2, 0, 1))
-        net_input_image = net_input_image.reshape(1, *net_input_image.shape)
 
         ### TODO: Start asynchronous inference for specified request ###
-         net_input = {'image_tensor': net_input_image, 'image_info': net_input_image.shape[1:]}
-        #duration_report = None
-        infer_network.exec_net(request_id, net_input)
 
         ### TODO: Wait for the result ###
-        if infer_network.wait() == 0:
+
             ### TODO: Get the results of the inference request ###
-            net_output = infer_network.get_output()
 
             ### TODO: Extract any desired stats from the results ###
-            people_detected = 0
-            probs = net_output[0, 0, :, 2]
-            for i, p in enumerate(probs):
-                if p > prob_threshold:
-                    people_detected += 1
-                    bbox = net_output[0, 0, i, 3:]
-                    p1 = (int(bbox[0] * w), int(bbox[1] * h))
-                    p2 = (int(bbox[2] * w), int(bbox[3] * h))
-                    frame = cv2.rectangle(frame, p1, p2, (0, 255, 0), 3)
-
 
             ### TODO: Calculate and send relevant information on ###
             ### current_count, total_count and duration to the MQTT server ###
             ### Topic "person": keys of "count" and "total" ###
             ### Topic "person/duration": key of "duration" ###
 
-            # someone enters the scene
-            if people_detected > current_counter:
-                timer_enter = time.time()
-                previous_off = timer_enter - timer_leave
-                current_counter = people_detected
-                if previous_off > 15:
-                    total_counter += people_detected - current_counter
-                    client.publish("person", json.dumps({"total": total_counter}))
-            
-            # someone leaves the scene
-            if people_detected < current_counter:
-                timer_leave = time.time()
-                previous_on = timer_leave - timer_enter
-                current_counter = people_detected
-                if previous_on > 15:
-                    client.publish("person/duration", json.dumps({"duration": int(previous_on)}))
+        ### TODO: Send the frame to the FFMPEG server ###
 
-            ### TODO: Send the frame to the FFMPEG server ###
-            client.publish("person", json.dumps({"count": current_counter}))
-
-        sys.stdout.buffer.write(frame)
-        sys.stdout.flush()
-        
         ### TODO: Write an output image if `single_image_mode` ###
-        if single_image_mode:
-            cv2.imwrite('output_image.jpg', frame)
-
-    cap.release()
-    cv2.destroyAllWindows()
 
 
 def main():
