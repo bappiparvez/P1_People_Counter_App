@@ -2,7 +2,7 @@
 
 This documents decribe my way around to the first project of Udacity Intel AI Edge Nanodegree Program
 
-To watch the video result please click [here] (https://youtu.be/CsYDw7GpZuA)
+To watch the video result please click [here](https://youtu.be/CsYDw7GpZuA).
 
 ### Downloading the Model
 
