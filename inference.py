@@ -84,7 +84,7 @@ class Network:
 
     def exec_net(self,image):
         ### TODO: Start an asynchronous request ###
-        self.exec_network.start_async(request_id=0, inputs={self.input_blob: image})
+        self.exec_network.start_async(request_id=request_id, inputs={self.input_blob: image})
     
         ### TODO: Return any necessary information ###
         ### Note: You may need to update the function parameters. ###
@@ -95,10 +95,19 @@ class Network:
         
         ### TODO: Return any necessary information ###
         ### Note: You may need to update the function parameters. ###
-        return self.exec_network.requests[0].wait(-1)
+        return self.exec_network.requests[request_id].wait(-1)
 
     def get_output(self):
         ### TODO: Extract and return the output results
         
         ### Note: You may need to update the function parameters. ###
-        return self.exec_network.requests[0].outputs[self.output_blob]
+        return self.exec_network.requests[request_id].outputs[self.output_blob]
+
+    def clean(self):
+        """
+        Deletes all the instances
+        :return: None
+        """
+        del self.net_plugin
+        del self.plugin
+        del self.net
